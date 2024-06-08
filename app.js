@@ -6,6 +6,7 @@ import logger from "morgan";
 
 import indexRouter from "./src/routes/index.js";
 import authRouter from "./src/routes/auth.js";
+import contactRouter from "./src/routes/contact.js";
 import sequelize from "./src/database/models/index.js";
 
 import { fileURLToPath } from "url";
@@ -39,6 +40,7 @@ const start = async () => {
 
 	app.use("/", indexRouter);
 	app.use("/auth", authRouter);
+	app.use("/contact", contactRouter);
 
 	// catch 404 and forward to error handler
 	app.use(function (req, res, next) {
