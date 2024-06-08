@@ -8,6 +8,7 @@ import indexRouter from "./src/routes/index.js";
 import authRouter from "./src/routes/auth.js";
 import contactRouter from "./src/routes/contact.js";
 import sequelize from "./src/database/models/index.js";
+import fileUpload from "express-fileupload";
 
 import { fileURLToPath } from "url";
 import http from "http";
@@ -21,6 +22,8 @@ const server = http.createServer(app);
 const start = async () => {
 	app.set("port", port);
 	await sequelize;
+
+	app.use(fileUpload({ debug: false }));
 
 	app.use(logger("dev"));
 	app.use(express.json());
