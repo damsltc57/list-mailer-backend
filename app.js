@@ -7,6 +7,7 @@ import logger from "morgan";
 import indexRouter from "./src/routes/index.js";
 import authRouter from "./src/routes/auth.js";
 import contactRouter from "./src/routes/contact.js";
+import mailAccount from "./src/routes/mailAccount.js";
 import sequelize from "./src/database/models/index.js";
 import fileUpload from "express-fileupload";
 
@@ -44,6 +45,7 @@ const start = async () => {
 	app.use("/", indexRouter);
 	app.use("/auth", authRouter);
 	app.use("/contact", contactRouter);
+	app.use("/mail-account", mailAccount);
 
 	// catch 404 and forward to error handler
 	app.use(function (req, res, next) {

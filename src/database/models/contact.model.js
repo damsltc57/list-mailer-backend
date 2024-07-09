@@ -11,6 +11,9 @@ const Contact = sequelize.define("Contact", {
 	distributor: DataTypes.BOOLEAN,
 	companyName: DataTypes.STRING,
 	formalityLevel: DataTypes.STRING,
+	interesting: DataTypes.BOOLEAN,
+	country: DataTypes.STRING,
+	website: DataTypes.STRING,
 });
 
 export default Contact;

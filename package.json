@@ -7,7 +7,8 @@
     "dev": "nodemon ./app.js",
     "migrate:up": "db-migrate up --config src/database/database.json --migrations-dir src/database/migrations -v",
     "migrate:down": "db-migrate down -c 1 --config src/database/database.json -m src/database/migrations",
-    "migrate:down:all": "db-migrate down -c 999 --config src/database/database.json -m src/database/migrations"
+    "migrate:down:all": "db-migrate down -c 999 --config src/database/database.json -m src/database/migrations",
+    "migrate:create": "db-migrate create --config src/database/database.json -m src/database/migrations"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -18,9 +19,11 @@
     "dotenv": "^16.4.5",
     "express": "~4.16.1",
     "express-fileupload": "^1.5.0",
+    "googleapis": "^140.0.1",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
+    "nodemailer": "^6.9.14",
     "nodemon": "^3.1.3",
     "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",

@@ -35,6 +35,9 @@ exports.up = (db) =>
 		 * formalityLevel = "formal"  # pour vouvoyer
 		 */
 		formalityLevel: { type: "string", allowNull: true },
+		interesting: { type: "boolean", allowNull: true },
+		country: { type: "string", allowNull: true },
+		website: { type: "string", allowNull: true },
 		createdAt: {
 			notNull: true,
 			type: new String("TIMESTAMPTZ"),
@@ -54,3 +57,23 @@ exports.down = function (db) {
 exports._meta = {
 	version: 1,
 };
+
+/**
+ * PAYS
+ * Cinéma ou Télévision
+ * Rôle
+ * Genre
+ * Interessant
+ * Tutoiement
+ * Nom de la société
+ * Rue
+ * Code postal
+ * Pays
+ * téléphone
+ * Prénom
+ * Nom
+ * Mail
+ * Poste
+ * Site Web
+ * Linkedin
+ */
