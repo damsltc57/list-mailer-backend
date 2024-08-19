@@ -16,6 +16,15 @@ export const buildTransporter = (mailAccount) => {
 				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 			},
 		};
+	} else {
+		config = {
+			host: "smtp.ethereal.email",
+			port: 587,
+			auth: {
+				user: "oliver.mcglynn@ethereal.email",
+				pass: "dZyyqMtZDmqFU7jH6T",
+			},
+		};
 	}
 	return nodemailer.createTransport(config);
 };

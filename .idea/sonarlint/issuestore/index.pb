@@ -17,7 +17,10 @@ T
 $src/database/migrations/package.json,1/b/1b430af80077cf1938f3893ac1289d09475848a4
 e
 5src/database/migrations/20190828125811-create-user.js,b/0/b035d5b6372eacf198e3045e7da7783d991d0d0c
-h
-8src/database/migrations/20190928125811-create-contact.js,1/9/19eeb211217f30069ae43cbbf9997a08591c8129
-I
-src/routes/mailAccount.js,7/9/792fec1afc6ad74967df525f4573d449edea8ee7
+T
+$src/database/models/contact.model.js,8/2/821d00b03568e01e23e884c157723c02b00a0126
+L
+src/database/models/index.js,c/a/ca715c04b50217d290c8d73bd77bf3be409f16d7
+:
+
+.gitignore,a/5/a5cc2925ca8258af241be7e5b0381edf30266302
