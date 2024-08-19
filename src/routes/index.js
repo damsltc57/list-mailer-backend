@@ -10,18 +10,31 @@ const router = express.Router();
 router.get("/", function (req, res, next) {});
 
 router.post("/send-mail", async function (req, res, next) {
-	const { object, selectedAddress, attachments, to, content } = req.body;
+	const { object, selectedAddress, to: toString, content } = req.body;
 
+	const to = JSON.parse(toString);
 	const mailAccount = await MailAccountModel.findByPk(selectedAddress);
 	const emailHistory = await MailHistories.create({ content, object, mailAccountId: mailAccount.id });
 	const transporter = buildTransporter(mailAccount);
-	for (let toEmail of to) {
+
+	const attachments = [];
+
+	Object.keys(req?.files).forEach((key) => {
+		let file = req.files[key];
+		attachments.push({
+			filename: file.name,
+			content: file.data,
+		});
+	});
+
+	const emailPromises = to.map(async (toEmail) => {
 		const updatedContent = formatEmail(content, toEmail);
 		const createdEmailContactHistory = await MailHistoriesContacts.create({
 			mailHistoryId: emailHistory.id,
 			contactId: toEmail.id,
 			status: "sending",
 		});
+
 		await new Promise((resolve) => {
 			transporter.sendMail(
 				{
@@ -30,6 +43,7 @@ router.post("/send-mail", async function (req, res, next) {
 					subject: object,
 					text: updatedContent,
 					html: updatedContent,
+					attachments: attachments,
 				},
 				async (err, res) => {
 					console.log("Hello world");
@@ -38,7 +52,17 @@ router.post("/send-mail", async function (req, res, next) {
 				},
 			);
 		});
-	}
+	});
+
+	await Promise.all(emailPromises)
+		.then((results) => {
+			console.log("All emails sent successfully:");
+		})
+		.catch((error) => {
+			console.error("One or more emails failed to send:");
+		});
+	transporter?.close();
+
 	res.status(200);
 });
 

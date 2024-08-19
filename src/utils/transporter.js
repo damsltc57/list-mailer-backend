@@ -26,5 +26,5 @@ export const buildTransporter = (mailAccount) => {
 			},
 		};
 	}
-	return nodemailer.createTransport(config);
+	return nodemailer.createTransport({ ...config, pool: true, rateLimit: Infinity, maxConnections: 5 });
 };
