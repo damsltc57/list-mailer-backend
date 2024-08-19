@@ -24,6 +24,12 @@ exports.up = (db) =>
 		},
 		contactId: { type: "uuid", allowNull: false },
 		mailHistoryId: { type: "uuid", allowNull: false },
+		/*
+		-sending
+		-error
+		-sent
+		 */
+		status: { type: "string", allowNull: false },
 		createdAt: {
 			notNull: true,
 			type: new String("TIMESTAMPTZ"),

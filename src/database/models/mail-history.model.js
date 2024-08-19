@@ -1,12 +1,7 @@
 import sequelize from "./index.js";
 import { DataTypes } from "sequelize";
 import Contact from "./contact.model.js";
-
-const MailHistoriesContacts = sequelize.define(
-	"MailHistoriesContacts",
-	{ contactId: DataTypes.UUID, mailHistoryId: DataTypes.UUID },
-	{ timestamps: false },
-);
+import MailHistoriesContacts from "./mail-history-contact.model.js";
 
 const MailHistories = sequelize.define("MailHistories", {
 	mailAccountId: DataTypes.UUID,
@@ -21,7 +16,7 @@ const MailHistories = sequelize.define("MailHistories", {
 
 MailHistories.belongsToMany(Contact, {
 	as: "to",
-	through: "MailHistoriesContacts",
+	through: MailHistoriesContacts,
 	foreignKey: "mailHistoryId", // replaces `productId`
 	otherKey: "contactId", // replaces `categoryId`
 });

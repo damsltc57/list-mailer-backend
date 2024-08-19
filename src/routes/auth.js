@@ -7,7 +7,7 @@ const router = express.Router();
 import { google } from "googleapis";
 import MailAccountModel from "../database/models/mail-account.model.js";
 
-const OAuth2Client = new google.auth.OAuth2(
+export const OAuth2Client = new google.auth.OAuth2(
 	process.env.GOOGLE_CLIENT_ID,
 	process.env.GOOGLE_CLIENT_SECRET,
 	process.env.GOOGLE_REDIRECT_URL,
@@ -107,7 +107,7 @@ router.post("/google/register", isAuthenticated, async function (req, res, next)
 			googleId: userid,
 			userId: req.auth.id,
 			email: email,
-			expires: tokens.expiry_date,
+			expires: (tokens.expiry_date / 1000).toFixed(0),
 		});
 	} else if (!!tokens.refresh_token && mailAccount) {
 		await MailAccountModel.update({ refreshToken: tokens.refresh_token }, { where: { googleId: userid } });
