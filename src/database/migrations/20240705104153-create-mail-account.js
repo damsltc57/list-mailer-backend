@@ -34,6 +34,7 @@ exports.up = (db) =>
 		refreshToken: { type: "string", allowNull: true },
 		googleId: { type: "string", allowNull: true },
 		expires: { type: "int", allowNull: true },
+		signature: { type: "string", allowNull: true },
 		createdAt: {
 			notNull: true,
 			type: new String("TIMESTAMPTZ"),

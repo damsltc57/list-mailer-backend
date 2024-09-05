@@ -14,6 +14,7 @@ const MailAccounts = sequelize.define("MailAccount", {
 	refreshToken: DataTypes.STRING,
 	googleId: DataTypes.STRING,
 	expires: DataTypes.INTEGER,
+	signature: DataTypes.STRING,
 });
 
 export default MailAccounts;

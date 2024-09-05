@@ -35,11 +35,11 @@ router.post("/login", async function (req, res, next) {
 
 	const isValidPassword = bcrypt.compareSync(password, user.password);
 	if (!isValidPassword) {
-		res.status(500).json("Forbidden");
+		return res.status(500).json("Forbidden");
 	}
 	const token = jwt.sign({ email, userId: user.id }, process.env.JTW_TOKEN, { expiresIn: "30d" });
 	delete user.password;
-	res.status(200).json({
+	return res.status(200).json({
 		token,
 		email,
 		user,
@@ -115,7 +115,7 @@ router.post("/google/register", isAuthenticated, async function (req, res, next)
 
 	// const mailAccount = MailAccountModel.create();
 	// oauth2Client.setCredentials(tokens);
-	res.status(200).json("");
+	return res.status(200).json("");
 });
 
 export default router;
