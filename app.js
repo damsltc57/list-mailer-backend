@@ -18,11 +18,12 @@ const __filename = fileURLToPath(import.meta.url); // get the resolved path to t
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 const app = express();
-const port = normalizePort(process.env.PORT || "3005");
+const port = normalizePort(process.env.PORT || "3000");
 const server = http.createServer(app);
 
 const start = async () => {
 	app.set("port", port);
+	console.log("Setting up on port ", port);
 	await sequelize;
 
 	app.use(fileUpload({ debug: false }));
