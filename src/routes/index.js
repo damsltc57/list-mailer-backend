@@ -7,7 +7,9 @@ import MailHistoriesContacts from "../database/models/mail-history-contact.model
 const router = express.Router();
 
 /* GET home page. */
-router.get("/", function (req, res, next) {});
+router.get("/", function (req, res, next) {
+	return res.status(200).send("Hello world");
+});
 
 router.post("/send-mail", async function (req, res, next) {
 	const { object, selectedAddress, to: toString, content } = req.body;
