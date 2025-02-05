@@ -18,12 +18,13 @@ export const buildTransporter = (mailAccount) => {
 		};
 	} else {
 		config = {
-			host: "smtp.ethereal.email",
-			port: 587,
+			host: mailAccount?.host,
+			port: mailAccount?.port,
 			auth: {
-				user: "oliver.mcglynn@ethereal.email",
-				pass: "dZyyqMtZDmqFU7jH6T",
+				user: mailAccount?.email,
+				pass: mailAccount?.pass,
 			},
+			...(mailAccount?.dkim?.domainName ? { dkim: { ...mailAccount?.dkim } } : {}),
 		};
 	}
 	return nodemailer.createTransport({ ...config, pool: true, rateLimit: Infinity, maxConnections: 5 });

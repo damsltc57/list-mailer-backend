@@ -15,6 +15,7 @@ const MailAccounts = sequelize.define("MailAccount", {
 	googleId: DataTypes.STRING,
 	expires: DataTypes.INTEGER,
 	signature: DataTypes.STRING,
+	dkim: DataTypes.JSON,
 });
 
 export default MailAccounts;
