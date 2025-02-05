@@ -17,12 +17,12 @@ exports.setup = function (options, seedLink) {
 exports.up = (db) =>
 	db.createTable("MailHistories", {
 		id: {
-			type: "uuid",
+			type: "int",
 			primaryKey: true,
 			notNull: true,
-			defaultValue: new String("uuid_generate_v4()"),
+			autoIncrement: true,
 		},
-		mailAccountId: { type: "uuid", allowNull: false },
+		mailAccountId: { type: "int", allowNull: false },
 		object: { type: "string", allowNull: true },
 		content: { type: "string", allowNull: true },
 		createdAt: {

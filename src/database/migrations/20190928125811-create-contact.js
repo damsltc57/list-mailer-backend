@@ -17,10 +17,10 @@ exports.setup = function (options, seedLink) {
 exports.up = (db) =>
 	db.createTable("Contacts", {
 		id: {
-			type: "uuid",
+			type: "int",
 			primaryKey: true,
 			notNull: true,
-			defaultValue: new String("uuid_generate_v4()"),
+			autoIncrement: true,
 		},
 		firstName: { type: "string" },
 		lastName: { type: "string" },

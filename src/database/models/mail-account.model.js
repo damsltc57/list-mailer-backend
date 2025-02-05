@@ -9,7 +9,7 @@ const MailAccounts = sequelize.define("MailAccount", {
 	user: DataTypes.STRING,
 	pass: DataTypes.STRING,
 	emailNickname: DataTypes.STRING,
-	userId: DataTypes.UUID,
+	userId: DataTypes.INTEGER,
 	accessToken: DataTypes.STRING,
 	refreshToken: DataTypes.STRING,
 	googleId: DataTypes.STRING,

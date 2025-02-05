@@ -15,31 +15,29 @@ exports.setup = function (options, seedLink) {
 };
 
 exports.up = (db) =>
-	db.runSql('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";').then(() =>
-		db.createTable("Users", {
-			id: {
-				type: "uuid",
-				primaryKey: true,
-				notNull: true,
-				defaultValue: new String("uuid_generate_v4()"),
-			},
-			firstName: { type: "string" },
-			lastName: { type: "string" },
-			email: { type: "string", unique: true },
-			password: { type: "string", allowNull: false },
-			signature: { type: "string", allowNull: true },
-			createdAt: {
-				notNull: true,
-				type: new String("TIMESTAMPTZ"),
-				defaultValue: new String("now()"),
-			},
-			updatedAt: {
-				notNull: true,
-				type: new String("TIMESTAMPTZ"),
-				defaultValue: new String("now()"),
-			},
-		}),
-	);
+	db.createTable("Users", {
+		id: {
+			type: "int",
+			primaryKey: true,
+			notNull: true,
+			autoIncrement: true,
+		},
+		firstName: { type: "string" },
+		lastName: { type: "string" },
+		email: { type: "string", unique: true },
+		password: { type: "string", allowNull: false },
+		signature: { type: "string", allowNull: true },
+		createdAt: {
+			notNull: true,
+			type: new String("TIMESTAMPTZ"),
+			defaultValue: new String("now()"),
+		},
+		updatedAt: {
+			notNull: true,
+			type: new String("TIMESTAMPTZ"),
+			defaultValue: new String("now()"),
+		},
+	});
 
 exports.down = function (db) {
 	return db.dropTable("Users");

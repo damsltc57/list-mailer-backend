@@ -4,7 +4,7 @@ import Contact from "./contact.model.js";
 import MailHistoriesContacts from "./mail-history-contact.model.js";
 
 const MailHistories = sequelize.define("MailHistories", {
-	mailAccountId: DataTypes.UUID,
+	mailAccountId: DataTypes.INTEGER,
 	object: DataTypes.STRING,
 	content: DataTypes.STRING,
 });

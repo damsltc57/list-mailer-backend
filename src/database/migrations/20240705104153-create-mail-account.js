@@ -17,10 +17,10 @@ exports.setup = function (options, seedLink) {
 exports.up = (db) =>
 	db.createTable("MailAccounts", {
 		id: {
-			type: "uuid",
+			type: "int",
 			primaryKey: true,
 			notNull: true,
-			defaultValue: new String("uuid_generate_v4()"),
+			autoIncrement: true,
 		},
 		host: { type: "string", allowNull: true },
 		port: { type: "int" },
@@ -29,7 +29,7 @@ exports.up = (db) =>
 		user: { type: "string", allowNull: false },
 		pass: { type: "string", allowNull: false },
 		emailNickname: { type: "string", allowNull: true },
-		userId: { type: "uuid", allowNull: false },
+		userId: { type: "int", allowNull: false },
 		accessToken: { type: "string", allowNull: true },
 		refreshToken: { type: "string", allowNull: true },
 		googleId: { type: "string", allowNull: true },
