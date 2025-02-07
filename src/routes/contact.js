@@ -5,6 +5,9 @@ import Contact from "../database/models/contact.model.js";
 const router = express.Router();
 import XLSX from "xlsx";
 import { Op } from "sequelize";
+import { buildContactModel } from "../helpers/contactHelper.js";
+import ContactList from "../database/models/contact-list.model.js";
+import contactList from "nodemailer/lib/smtp-connection/index.js";
 
 router.post("/create", isAuthenticated, async function (req, res, next) {
 	const args = req.body;
@@ -32,16 +35,23 @@ router.post("/update", isAuthenticated, async function (req, res, next) {
 	res.status(200).json({ contact });
 });
 
-router.get("/list", isAuthenticated, async function (req, res, next) {
-	const list = await Contact.findAll({ order: [["createdAt", "DESC"]] });
+router.get("/list/:listId?", isAuthenticated, async function (req, res, next) {
+	const listId = parseInt(req.params.listId);
+	const list = await Contact.findAll({
+		order: [["createdAt", "DESC"]],
+		where: { userId: req.auth.id, ...(!!listId ? { contactListId: listId } : {}) },
+	});
 
 	res.status(200).json(list);
 });
 router.get("/find", isAuthenticated, async function (req, res, next) {
-	const { categoryValue, formalityLevel, interesting, country, query } = req.query;
+	const { categoryValue, formalityLevel, interesting, country, query, listId } = req.query;
 	let queryWhere = {};
 	if (formalityLevel) {
 		queryWhere.formalityLevel = formalityLevel;
+	}
+	if (parseInt(listId)) {
+		queryWhere.contactListId = parseInt(listId);
 	}
 	if (country) {
 		queryWhere.country = country;
@@ -95,10 +105,45 @@ router.post("/import", isAuthenticated, async function (req, res, next) {
 		res.status(404);
 		return;
 	}
+	const { list: listData } = req.body;
+	const list = JSON.parse(listData);
 	const wb = XLSX.read(req.files.file.data, { type: "buffer" });
 	const sheet = wb.Sheets[wb.SheetNames[0]];
 	const json = XLSX.utils.sheet_to_json(sheet, { header: 0 });
-	res.status(200);
+
+	let contactListId = null;
+	if (!list?.id) {
+		const contactList = await ContactList.create({ name: list.name, userId: req.auth.id });
+		contactListId = contactList.id;
+	} else {
+		const contactList = await ContactList.findByPk(list?.id);
+		if (!contactList) {
+			res.status(400);
+		}
+		contactListId = contactList.id;
+
+		await Contact.destroy({
+			where: {
+				contactListId,
+			},
+		});
+	}
+	let data = [];
+	for (let jsonItem of json) {
+		if (!!jsonItem?.first_name) {
+			data.push(buildContactModel(jsonItem, contactListId, req.auth.id));
+		}
+	}
+
+	const contactCreated = await Contact.bulkCreate(data);
+
+	return res.status(200).json(contactCreated);
+});
+
+router.get("/contact-list", isAuthenticated, async function (req, res, next) {
+	const list = await ContactList.findAll({ order: [["createdAt", "DESC"]], where: { userId: req.auth.id } });
+
+	res.status(200).json(list);
 });
 
 export default router;
