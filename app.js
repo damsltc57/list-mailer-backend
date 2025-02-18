@@ -11,7 +11,7 @@ import mailAccount from "./src/routes/mailAccount.js";
 import mailHistory from "./src/routes/mailHistory.js";
 import sequelize from "./src/database/models/index.js";
 import fileUpload from "express-fileupload";
-
+import cors from "cors";
 import { fileURLToPath } from "url";
 import http from "http";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -26,6 +26,7 @@ const start = async () => {
 	await sequelize;
 
 	app.use(fileUpload({ debug: false }));
+	app.use(cors({ origin: process.env.APP_ORIGIN }));
 
 	app.use(logger("dev"));
 	app.use(express.urlencoded({ extended: false }));
@@ -35,7 +36,6 @@ const start = async () => {
 	app.use(express.urlencoded({ limit: "10mb", extended: true, parameterLimit: 50000 }));
 
 	app.use((req, res, next) => {
-		res.setHeader("Access-Control-Allow-Origin", "*");
 		res.setHeader(
 			"Access-Control-Allow-Headers",
 			"Origin, X-Requested-With, Content, Accept, Content-Type, Authorization",
