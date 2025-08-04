@@ -13,59 +13,75 @@ router.get("/", function (req, res, next) {
 
 router.post("/send-mail", async function (req, res, next) {
 	const { object, selectedAddress, to: toString, content } = req.body;
-
 	const to = JSON.parse(toString);
-	const mailAccount = await MailAccountModel.findByPk(selectedAddress);
-	const emailHistory = await MailHistories.create({ content, object, mailAccountId: mailAccount.id });
-	const transporter = buildTransporter(mailAccount);
-
 	const attachments = [];
 
-	Object.keys(req?.files).forEach((key) => {
-		let file = req.files[key];
-		attachments.push({
-			filename: file.name,
-			content: file.data,
-		});
-	});
+	res.sendStatus(200);
 
-	const emailPromises = to.map(async (toEmail) => {
-		const updatedContent = formatEmail(content, toEmail);
-		const createdEmailContactHistory = await MailHistoriesContacts.create({
-			mailHistoryId: emailHistory.id,
-			contactId: toEmail.id,
-			status: "sending",
-		});
+	void (async () => {
+		try {
+			const mailAccount = await MailAccountModel.findByPk(selectedAddress);
+			const emailHistory = await MailHistories.create({ content, object, mailAccountId: mailAccount.id });
+			const transporter = buildTransporter(mailAccount);
 
-		await new Promise((resolve) => {
-			transporter.sendMail(
-				{
-					from: mailAccount.email,
-					to: toEmail.email,
-					subject: object,
-					text: updatedContent,
-					html: updatedContent,
-					attachments: attachments,
-				},
-				async (err, res) => {
-					console.log("Hello world");
-					await createdEmailContactHistory.update({ status: res?.accepted.length > 0 ? "sent" : "error" });
-					resolve(res);
-				},
-			);
-		});
-	});
+			if (req.files) {
+				Object.keys(req.files).forEach((key) => {
+					let file = req.files[key];
+					attachments.push({
+						filename: file.name,
+						content: file.data,
+					});
+				});
+			}
 
-	await Promise.all(emailPromises)
-		.then((results) => {
-			console.log("All emails sent successfully:");
-		})
-		.catch((error) => {
-			console.error("One or more emails failed to send:");
-		});
-	transporter?.close();
+			const chunkArray = (array, size) => {
+				const result = [];
+				for (let i = 0; i < array.length; i += size) {
+					result.push(array.slice(i, i + size));
+				}
+				return result;
+			};
 
-	res.status(200);
+			const batches = chunkArray(to, 20);
+			for (const batch of batches) {
+				await Promise.all(
+					batch.map(async (toEmail) => {
+						const updatedContent = formatEmail(content, toEmail);
+						const createdEmailContactHistory = await MailHistoriesContacts.create({
+							mailHistoryId: emailHistory.id,
+							contactId: toEmail.id,
+							status: "sending",
+						});
+
+						try {
+							const result = await transporter.sendMail({
+								from: mailAccount.email,
+								to: toEmail.email,
+								subject: object,
+								text: updatedContent,
+								html: updatedContent,
+								attachments: attachments,
+							});
+
+							const status = result.accepted.length > 0 ? "sent" : "error";
+							await createdEmailContactHistory.update({ status });
+							console.log(`✅ Email envoyé à ${toEmail.email}`);
+						} catch (err) {
+							await createdEmailContactHistory.update({ status: "error" });
+							console.error(`❌ Erreur pour ${toEmail.email}: ${err.message}`);
+						}
+					}),
+				);
+
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+
+			transporter?.close();
+			console.log("✅ Tous les e-mails ont été traités.");
+		} catch (err) {
+			console.error("❌ Erreur dans le traitement de fond :", err.message);
+		}
+	})();
 });
 
 export default router;

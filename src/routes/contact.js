@@ -38,8 +38,8 @@ router.post("/update", isAuthenticated, async function (req, res, next) {
 router.get("/list/:listId?", isAuthenticated, async function (req, res, next) {
 	const listId = parseInt(req.params.listId);
 	const list = await Contact.findAll({
-		order: [["createdAt", "DESC"]],
-		where: { userId: req.auth.id, ...(!!listId ? { contactListId: listId } : {}) },
+		order: [["companyName", "ASC"]],
+		where: { [Op.or]: [{ userId: req.auth.id }, { userId: null }], ...(!!listId ? { contactListId: listId } : {}) },
 	});
 
 	res.status(200).json(list);
@@ -141,7 +141,10 @@ router.post("/import", isAuthenticated, async function (req, res, next) {
 });
 
 router.get("/contact-list", isAuthenticated, async function (req, res, next) {
-	const list = await ContactList.findAll({ order: [["createdAt", "DESC"]], where: { userId: req.auth.id } });
+	const list = await ContactList.findAll({
+		order: [["name", "ASC"]],
+		where: { [Op.or]: [{ userId: req.auth.id }, { userId: null }] },
+	});
 
 	res.status(200).json(list);
 });

@@ -8,6 +8,11 @@ function wait(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const formalityMap = {
+	VOUS: "formal",
+	TU: "informal",
+};
+
 async function getAllSheetsData() {
 	const keyFile = await fs.readFile("./keys.json", "utf-8");
 	const keys = JSON.parse(keyFile);
@@ -88,7 +93,7 @@ async function saveContactsToDB(contacts, sheetName) {
 			lastName: contactSheet.last_name || "",
 			email: contactSheet.Email,
 			companyName: contactSheet.company || null,
-			formalityLevel: contactSheet?.["VOUS ou TU"] === "VOUS" ? "formal" : "informal",
+			formalityLevel: formalityMap[contactSheet?.["VOUS ou TU"]] || "",
 			interesting: contactSheet?.["INTERESSANT ?"] === "OUI",
 			country: contactSheet.country || null,
 			website: contactSheet?.website_company || null,
