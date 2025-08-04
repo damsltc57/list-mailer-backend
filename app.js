@@ -3,7 +3,7 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
-
+import "./cron/contacts.js";
 import indexRouter from "./src/routes/index.js";
 import authRouter from "./src/routes/auth.js";
 import contactRouter from "./src/routes/contact.js";
@@ -14,6 +14,7 @@ import fileUpload from "express-fileupload";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import http from "http";
+import { updateContacts } from "./cron/contacts.js";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -71,6 +72,7 @@ start().then(() => {
 	server.listen(port);
 	server.on("error", onError);
 	server.on("listening", onListening);
+	// updateContacts();
 });
 
 function onListening() {
