@@ -75,8 +75,8 @@ async function saveContactsToDB(contacts, sheetName) {
 	// 2. Prépare les données du Sheet dans une Map par email
 	const sheetEmailMap = new Map();
 	contacts.forEach((c) => {
-		if (c.Email) {
-			sheetEmailMap.set(c.Email, c);
+		if (c.email_company) {
+			sheetEmailMap.set(c.email_company, c);
 		}
 	});
 
@@ -91,7 +91,7 @@ async function saveContactsToDB(contacts, sheetName) {
 		const newData = {
 			firstName: contactSheet.first_name || "",
 			lastName: contactSheet.last_name || "",
-			email: contactSheet.Email,
+			email: contactSheet.email_company,
 			companyName: contactSheet.company || null,
 			formalityLevel: formalityMap[contactSheet?.["VOUS ou TU"]] || "",
 			interesting: contactSheet?.["INTERESSANT ?"] === "OUI",

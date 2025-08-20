@@ -14,7 +14,7 @@ import fileUpload from "express-fileupload";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import http from "http";
-import { updateContacts } from "./cron/contacts.js";
+// import { updateContacts } from "./cron/contacts.js";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -72,7 +72,7 @@ start().then(() => {
 	server.listen(port);
 	server.on("error", onError);
 	server.on("listening", onListening);
-	updateContacts();
+	// updateContacts();
 });
 
 function onListening() {
