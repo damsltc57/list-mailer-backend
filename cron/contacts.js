@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import ContactList from "../src/database/models/contact-list.model.js";
 import Contact from "../src/database/models/contact.model.js";
 import cron from "node-cron";
+import sequelize from "../src/database/models/index.js";
 
 function wait(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -143,10 +144,11 @@ async function saveContactsToDB(contacts, sheetName) {
 }
 
 export async function updateContacts() {
+	await sequelize;
 	await getAllSheetsData();
 }
 
-cron.schedule("0 0 */1 * *", async () => {
-	console.log("⏱️ Cron lancé : mise à jour des contacts");
-	await updateContacts();
-});
+// cron.schedule("0 0 */1 * *", async () => {
+// 	console.log("⏱️ Cron lancé : mise à jour des contacts");
+// 	await updateContacts();
+// });
