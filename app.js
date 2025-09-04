@@ -26,8 +26,8 @@ const start = async () => {
 	await sequelize;
 
 	app.use(fileUpload({ debug: false }));
-	app.use(cors({ origin: process.env.APP_ORIGIN }));
-
+	app.use(cors({ origin: process.env.APP_ORIGIN, methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"] }));
+	app.options("*", cors({ methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"] }));
 	app.use(logger("dev"));
 	app.use(express.urlencoded({ extended: false }));
 	app.use(cookieParser());

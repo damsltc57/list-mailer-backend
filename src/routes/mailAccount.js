@@ -10,7 +10,7 @@ const router = express.Router();
 google.options({ auth: OAuth2Client });
 
 router.get("/list", isAuthenticated, async function (req, res, next) {
-	let list = await MailAccountModel.findAll({ where: { userId: req.auth.id }, order: [["createdAt", "DESC"]] });
+	let list = await MailAccountModel.findAll({ where: { userId: req.auth.id }, order: [["email", "ASC"]] });
 
 	for (let email of list) {
 		if (email?.googleId) {
@@ -53,7 +53,7 @@ router.get("/test/:addressId", isAuthenticated, async function (req, res, next) 
 	});
 });
 
-router.patch("/update/:addressId", isAuthenticated, async function (req, res, next) {
+router.post("/update/:addressId", isAuthenticated, async function (req, res, next) {
 	const { addressId } = req.params;
 	const { ...args } = req.body;
 	const mailAccount = await MailAccountModel.findByPk(addressId);
