@@ -1,25 +1,13 @@
-import config from "../config.js";
-import { Sequelize } from "sequelize";
+// models/index.js
+import { sequelize } from "../db.js";
+import Contact from "./contact.model.js";
+import Collaborator from "./collaborator.model.js";
 
-const env = process.env.NODE_ENV || "development";
-const currentConfig = config[env];
-
-import { fileURLToPath } from "url";
-import path from "path";
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
-
-let sequelize;
-try {
-	sequelize = new Sequelize({
-		...currentConfig,
-		models: [__dirname + "/**/*.model.ts"],
-		modelMatch: (filename, member) => {
-			return filename.substring(0, filename.indexOf(".model")) === member.toLowerCase();
-		},
-	});
-} catch (error) {
-	throw error;
+// Définir les relations après que les modèles soient chargés
+export function applyAssociations() {
+	Collaborator.belongsTo(Contact, { foreignKey: "contactId" });
+	Contact.hasMany(Collaborator, { foreignKey: "contactId" });
 }
 
-export default sequelize;
+// Optionnel : exporter pour usage ailleurs
+export { Contact, Collaborator, sequelize };

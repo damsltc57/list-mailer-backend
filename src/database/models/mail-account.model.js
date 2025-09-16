@@ -1,4 +1,4 @@
-import sequelize from "./index.js";
+import { sequelize } from "./index.js";
 import { DataTypes } from "sequelize";
 
 const MailAccounts = sequelize.define("MailAccount", {

@@ -1,4 +1,4 @@
-import sequelize from "./index.js";
+import { sequelize } from "./index.js";
 import { DataTypes } from "sequelize";
 
 const Contact = sequelize.define("Contact", {
