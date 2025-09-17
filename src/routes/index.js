@@ -57,7 +57,10 @@ router.post("/send-mail", async function (req, res, next) {
 
 						try {
 							const result = await transporter.sendMail({
-								from: mailAccount.email,
+								from: {
+									name: mailAccount.emailNickname,
+									address: mailAccount.email,
+								},
 								to: toEmail.email,
 								subject: object,
 								text: buildMailBodies({ html: updatedContent, htmlToTextOptions: {} }),
