@@ -1,5 +1,15 @@
 export const getCollaborators = async (contactSheet) => {
 	const data = [];
+
+	data.push({
+		firstName: contactSheet[`First Name`] || "",
+		lastName: contactSheet[`Last Name`] || "",
+		email: contactSheet[`Email`]?.trim(),
+		phone: contactSheet[`Phone`] || "",
+		position: contactSheet[`Position`] || "",
+		linkedin: contactSheet[`LinkedIn`] || "",
+	});
+
 	for (let i = 1; i < 45; i++) {
 		const email = contactSheet[`collaborator${i}_email`]?.trim();
 		// On saute les cases vides mais on continue la boucle

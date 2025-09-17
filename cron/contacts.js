@@ -70,7 +70,7 @@ async function saveContactsToDB(contacts, sheetName) {
 		include: [
 			{
 				model: Collaborator,
-				as: "Collaborators", // alias conservé en Maj
+				as: "collaborators", // alias conservé en Maj
 				attributes: ["id", "email", "firstName", "lastName", "phone", "position", "linkedin"],
 			},
 		],
@@ -85,8 +85,8 @@ async function saveContactsToDB(contacts, sheetName) {
 	// 2) Préparer les données du Sheet dans une Map par email
 	const sheetEmailMap = new Map();
 	contacts.forEach((c) => {
-		if (c.email_company) {
-			sheetEmailMap.set(c.email_company, c);
+		if (c?.email_company ?? c?.["Email Company"]) {
+			sheetEmailMap.set(c?.email_company ?? c?.["Email Company"], c);
 		}
 	});
 
@@ -108,6 +108,7 @@ async function saveContactsToDB(contacts, sheetName) {
 		"tvProducer",
 		"filmProducer",
 		"contactListId",
+		"position",
 		"userId",
 	];
 
@@ -117,16 +118,17 @@ async function saveContactsToDB(contacts, sheetName) {
 		const newData = {
 			firstName: contactSheet.first_name || "",
 			lastName: contactSheet.last_name || "",
-			email: contactSheet.email_company,
+			email: contactSheet?.email_company ?? contactSheet?.["Email Company"],
 			companyName: contactSheet.company || null,
 			formalityLevel: formalityMap[contactSheet?.["VOUS ou TU"]] || "",
 			interesting: contactSheet?.["INTERESSANT ?"] === "OUI",
 			country: contactSheet.country || null,
+			position: contactSheet.position || null,
 			website: contactSheet?.website_company || null,
 			tvProducer: contactSheet?.["Film_TV"]?.includes("TV") || false,
 			filmProducer: contactSheet?.["Film_TV"]?.includes("Film") || false,
 			contactListId: contactList.id,
-			Collaborators: await getCollaborators(contactSheet), // 👈 alias conservé
+			collaborators: await getCollaborators(contactSheet), // 👈 alias conservé
 			userId: null,
 		};
 
@@ -139,8 +141,8 @@ async function saveContactsToDB(contacts, sheetName) {
 
 			// 2) comparer collaborateurs (existing.Collaborators peut être undefined)
 			const { toCreate, toUpdate, toDelete } = diffCollaborators(
-				existing.Collaborators || [],
-				newData.Collaborators || [],
+				existing.collaborators || [],
+				newData.collaborators || [],
 			);
 
 			const collabsChanged = toCreate.length > 0 || toUpdate.length > 0 || toDelete.length > 0;
@@ -163,7 +165,7 @@ async function saveContactsToDB(contacts, sheetName) {
 	if (contactsToInsert.length > 0) {
 		for (const contactToInsert of contactsToInsert) {
 			await Contact.create(contactToInsert, {
-				include: [{ model: Collaborator, as: "Collaborators" }],
+				include: [{ model: Collaborator, as: "collaborators" }],
 			});
 		}
 		console.log(`✅ Ajouté ${contactsToInsert.length} nouveaux contacts dans "${sheetName}"`);
@@ -172,7 +174,7 @@ async function saveContactsToDB(contacts, sheetName) {
 	// UPDATES : base + collaborateurs (create/update/delete)
 	if (contactsToUpdate.length > 0) {
 		for (const contact of contactsToUpdate) {
-			const { id, _collabDiff, Collaborators: nextCollabs, ...updateFields } = contact;
+			const { id, _collabDiff, collaborators: nextCollabs, ...updateFields } = contact;
 
 			// maj des champs de base
 			await Contact.update(updateFields, { where: { id } });
@@ -226,7 +228,6 @@ export async function updateContacts() {
 	applyAssociations();
 	await getAllSheetsData();
 }
-updateContacts();
 // cron.schedule("0 0 */1 * *", async () => {
 // 	console.log("⏱️ Cron lancé : mise à jour des contacts");
 // 	await updateContacts();

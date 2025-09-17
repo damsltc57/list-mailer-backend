@@ -14,6 +14,7 @@ const Contact = sequelize.define("Contact", {
 	interesting: DataTypes.BOOLEAN,
 	country: DataTypes.STRING,
 	website: DataTypes.STRING,
+	position: DataTypes.STRING,
 	contactListId: DataTypes.INTEGER,
 	userId: DataTypes.INTEGER,
 });
