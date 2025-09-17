@@ -1,7 +1,7 @@
 import express from "express";
 import MailAccountModel from "../database/models/mail-account.model.js";
 import { buildTransporter } from "../utils/transporter.js";
-import { formatEmail } from "../utils/email.js";
+import { buildEmails, formatEmail } from "../utils/email.js";
 import MailHistories from "../database/models/mail-history.model.js";
 import MailHistoriesContacts from "../database/models/mail-history-contact.model.js";
 const router = express.Router();
@@ -15,6 +15,7 @@ router.post("/send-mail", async function (req, res, next) {
 	const { object, selectedAddress, to: toString, content } = req.body;
 	const to = JSON.parse(toString);
 	const attachments = [];
+	const toEmails = await buildEmails(to);
 
 	res.sendStatus(200);
 
@@ -42,7 +43,7 @@ router.post("/send-mail", async function (req, res, next) {
 				return result;
 			};
 
-			const batches = chunkArray(to, 20);
+			const batches = chunkArray(toEmails, 20);
 			for (const batch of batches) {
 				await Promise.all(
 					batch.map(async (toEmail) => {
@@ -51,6 +52,7 @@ router.post("/send-mail", async function (req, res, next) {
 							mailHistoryId: emailHistory.id,
 							contactId: toEmail.id,
 							status: "sending",
+							email: toEmail.email,
 						});
 
 						try {

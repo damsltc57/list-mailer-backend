@@ -8,11 +8,12 @@ import authRouter from "./src/routes/auth.js";
 import contactRouter from "./src/routes/contact.js";
 import mailAccount from "./src/routes/mailAccount.js";
 import mailHistory from "./src/routes/mailHistory.js";
-import sequelize from "./src/database/models/index.js";
+import { applyAssociations } from "./src/database/models/index.js";
 import fileUpload from "express-fileupload";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import http from "http";
+import { connectDB } from "./src/database/db.js";
 // import { updateContacts } from "./cron/contacts.js";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -23,7 +24,8 @@ const server = http.createServer(app);
 
 const start = async () => {
 	app.set("port", port);
-	await sequelize;
+	await connectDB();
+	applyAssociations();
 
 	app.use(fileUpload({ debug: false }));
 	app.use(cors({ origin: process.env.APP_ORIGIN, methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"] }));

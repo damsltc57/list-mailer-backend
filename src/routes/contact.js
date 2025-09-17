@@ -8,6 +8,7 @@ import { Op } from "sequelize";
 import { buildContactModel } from "../helpers/contactHelper.js";
 import ContactList from "../database/models/contact-list.model.js";
 import contactList from "nodemailer/lib/smtp-connection/index.js";
+import { Collaborator } from "../database/models/index.js";
 
 router.post("/create", isAuthenticated, async function (req, res, next) {
 	const args = req.body;
@@ -95,8 +96,24 @@ router.get("/find", isAuthenticated, async function (req, res, next) {
 			],
 		};
 	}
-	const list = await Contact.findAll({ order: [["createdAt", "DESC"]], where: { ...queryWhere } });
+	const list = await Contact.findAll({
+		order: [["createdAt", "DESC"]],
+		where: { ...queryWhere },
+		include: [{ model: Collaborator, as: "collaborators" }],
+	});
 
+	res.status(200).json(list);
+});
+
+router.get("/ids", isAuthenticated, async function (req, res, next) {
+	const { ids } = req.query;
+	const idList = ids.split(",").map(Number);
+	const list = await Contact.findAll({
+		order: [["createdAt", "DESC"]],
+		where: {
+			id: { [Op.in]: idList },
+		},
+	});
 	res.status(200).json(list);
 });
 
