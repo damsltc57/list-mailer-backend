@@ -1,7 +1,7 @@
 import express from "express";
 import MailAccountModel from "../database/models/mail-account.model.js";
 import { buildTransporter } from "../utils/transporter.js";
-import { buildEmails, formatEmail } from "../utils/email.js";
+import { buildEmails, buildMailBodies, formatEmail } from "../utils/email.js";
 import MailHistories from "../database/models/mail-history.model.js";
 import MailHistoriesContacts from "../database/models/mail-history-contact.model.js";
 const router = express.Router();
@@ -47,7 +47,7 @@ router.post("/send-mail", async function (req, res, next) {
 			for (const batch of batches) {
 				await Promise.all(
 					batch.map(async (toEmail) => {
-						const updatedContent = formatEmail(content, toEmail);
+						const updatedContent = formatEmail(content, toEmail, mailAccount.signature);
 						const createdEmailContactHistory = await MailHistoriesContacts.create({
 							mailHistoryId: emailHistory.id,
 							contactId: toEmail.id,
@@ -60,7 +60,7 @@ router.post("/send-mail", async function (req, res, next) {
 								from: mailAccount.email,
 								to: toEmail.email,
 								subject: object,
-								text: updatedContent,
+								text: buildMailBodies({ html: updatedContent, htmlToTextOptions: {} }),
 								html: updatedContent,
 								attachments: attachments,
 							});

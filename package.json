@@ -21,6 +21,7 @@
     "express": "~4.16.1",
     "express-fileupload": "^1.5.0",
     "googleapis": "^140.0.1",
+    "html-to-text": "^9.0.5",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
