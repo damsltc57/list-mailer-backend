@@ -2,7 +2,6 @@ import { google } from "googleapis";
 import fs from "fs/promises";
 import ContactList from "../src/database/models/contact-list.model.js";
 import Contact from "../src/database/models/contact.model.js";
-import cron from "node-cron";
 import { applyAssociations, Collaborator } from "../src/database/models/index.js";
 import { connectDB } from "../src/database/db.js";
 import { diffCollaborators, getCollaborators } from "./utils.js";
@@ -110,26 +109,32 @@ async function saveContactsToDB(contacts, sheetName) {
 		"contactListId",
 		"position",
 		"userId",
+		"broadcaster",
+		"distributor",
+		"producer",
 	];
 
 	for (const [email, contactSheet] of sheetEmailMap.entries()) {
 		const existing = existingEmailMap.get(email);
 
 		const newData = {
-			firstName: contactSheet.first_name || "",
-			lastName: contactSheet.last_name || "",
+			firstName: contactSheet?.[`First Name`] || "",
+			lastName: contactSheet?.[`Last Name`] || "",
 			email: contactSheet?.email_company ?? contactSheet?.["Email Company"],
-			companyName: contactSheet.company || null,
+			companyName: contactSheet?.["Company"] || null,
 			formalityLevel: formalityMap[contactSheet?.["VOUS ou TU"]] || "",
-			interesting: contactSheet?.["INTERESSANT ?"] === "OUI",
-			country: contactSheet.country || null,
-			position: contactSheet.position || null,
-			website: contactSheet?.website_company || null,
+			interesting: contactSheet?.["INTERESSANT"] === "OUI",
+			country: contactSheet?.["Country"] || null,
+			position: contactSheet?.["Position"] || null,
+			website: contactSheet?.["Website"] || null,
 			tvProducer: contactSheet?.["Film_TV"]?.includes("TV") || false,
 			filmProducer: contactSheet?.["Film_TV"]?.includes("Film") || false,
 			contactListId: contactList.id,
-			collaborators: await getCollaborators(contactSheet), // 👈 alias conservé
+			collaborators: await getCollaborators(contactSheet),
 			userId: null,
+			broadcaster: contactSheet?.["Role Company"]?.includes("Broadcaster") || false,
+			distributor: contactSheet?.["Role Company"]?.includes("Distribution") || false,
+			producer: contactSheet?.["Role Company"]?.includes("Production") || false,
 		};
 
 		if (!existing) {

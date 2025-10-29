@@ -57,17 +57,13 @@ router.get("/find", isAuthenticated, async function (req, res, next) {
 	if (country) {
 		queryWhere.country = country;
 	}
-	if (categoryValue.includes("tvProducer")) {
-		queryWhere.tvProducer = true;
-	}
-	if (categoryValue.includes("filmProducer")) {
-		queryWhere.filmProducer = true;
-	}
-	if (categoryValue.includes("broadcaster")) {
-		queryWhere.broadcaster = true;
-	}
-	if (categoryValue.includes("distributor")) {
-		queryWhere.distributor = true;
+	const roleFilters = ["tvProducer", "filmProducer", "broadcaster", "distributor"];
+	const activeRoles = roleFilters.filter((role) => categoryValue.includes(role));
+
+	if (activeRoles.length === 1) {
+		queryWhere[activeRoles[0]] = true;
+	} else if (activeRoles.length > 1) {
+		queryWhere[Op.or] = activeRoles.map((role) => ({ [role]: true }));
 	}
 	if (query) {
 		queryWhere = {

@@ -9,6 +9,7 @@ const Contact = sequelize.define("Contact", {
 	filmProducer: DataTypes.BOOLEAN,
 	broadcaster: DataTypes.BOOLEAN,
 	distributor: DataTypes.BOOLEAN,
+	producer: DataTypes.BOOLEAN,
 	companyName: DataTypes.STRING,
 	formalityLevel: DataTypes.STRING,
 	interesting: DataTypes.BOOLEAN,
