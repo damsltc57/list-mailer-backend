@@ -4,7 +4,7 @@ export const getCollaborators = async (contactSheet) => {
 	data.push({
 		firstName: contactSheet[`First Name`] || "",
 		lastName: contactSheet[`Last Name`] || "",
-		email: contactSheet[`Email`]?.trim(),
+		email: contactSheet[`Email Company`]?.trim(),
 		phone: contactSheet[`Phone`] || "",
 		position: contactSheet[`Position`] || "",
 		linkedin: contactSheet[`LinkedIn`] || "",
