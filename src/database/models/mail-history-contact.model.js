@@ -10,6 +10,7 @@ const MailHistoriesContacts = sequelize.define(
 		contactId: DataTypes.INTEGER,
 		email: DataTypes.STRING,
 		collaboratorId: DataTypes.INTEGER,
+		error: DataTypes.TEXT,
 	},
 	{ timestamps: false },
 );

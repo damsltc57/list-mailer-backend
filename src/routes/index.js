@@ -23,7 +23,6 @@ router.post("/send-mail", async function (req, res, next) {
 		try {
 			const mailAccount = await MailAccountModel.findByPk(selectedAddress);
 			const emailHistory = await MailHistories.create({ content, object, mailAccountId: mailAccount.id });
-			const transporter = buildTransporter(mailAccount);
 
 			if (req.files) {
 				Object.keys(req.files).forEach((key) => {
@@ -82,7 +81,6 @@ router.post("/send-mail", async function (req, res, next) {
 				await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
 
-			transporter?.close();
 			console.log("✅ Tous les e-mails ont été traités.");
 		} catch (err) {
 			console.error("❌ Erreur dans le traitement de fond :", err.message);

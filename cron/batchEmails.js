@@ -34,7 +34,7 @@ const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter,
 			} catch (err) {
 				// await createdEmailContactHistory.update({ status: "error" });
 				await MailHistoriesContacts.update(
-					{ status: "error" },
+					{ status: "error", error: err.message },
 					{ where: { id: toEmail.mailHistoryContactId } },
 				);
 				console.error(`❌ Erreur pour ${toEmail.email}: ${err.message}`);
