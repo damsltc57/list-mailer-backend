@@ -24,7 +24,12 @@ export const buildEmails = async (to) => {
 			}
 		} else {
 			for (const collaborator of contact?.collaborators) {
-				toEmails.push({ id: collaborator.id, email: collaborator.email, firstName: collaborator.firstName });
+				toEmails.push({
+					id: collaborator.id,
+					email: collaborator.email,
+					firstName: collaborator.firstName,
+					collaboratorId: collaborator.id,
+				});
 			}
 		}
 	}

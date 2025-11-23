@@ -51,30 +51,31 @@ router.post("/send-mail", async function (req, res, next) {
 						const createdEmailContactHistory = await MailHistoriesContacts.create({
 							mailHistoryId: emailHistory.id,
 							contactId: toEmail.id,
-							status: "sending",
+							status: "pending",
 							email: toEmail.email,
+							collaboratorId: toEmail.collaboratorId,
 						});
 
-						try {
-							const result = await transporter.sendMail({
-								from: {
-									name: mailAccount.emailNickname,
-									address: mailAccount.email,
-								},
-								to: toEmail.email,
-								subject: object,
-								text: buildMailBodies({ html: updatedContent, htmlToTextOptions: {} }),
-								html: updatedContent,
-								attachments: attachments,
-							});
-
-							const status = result.accepted.length > 0 ? "sent" : "error";
-							await createdEmailContactHistory.update({ status });
-							console.log(`✅ Email envoyé à ${toEmail.email}`);
-						} catch (err) {
-							await createdEmailContactHistory.update({ status: "error" });
-							console.error(`❌ Erreur pour ${toEmail.email}: ${err.message}`);
-						}
+						// try {
+						// 	const result = await transporter.sendMail({
+						// 		from: {
+						// 			name: mailAccount.emailNickname,
+						// 			address: mailAccount.email,
+						// 		},
+						// 		to: toEmail.email,
+						// 		subject: object,
+						// 		text: buildMailBodies({ html: updatedContent, htmlToTextOptions: {} }),
+						// 		html: updatedContent,
+						// 		attachments: attachments,
+						// 	});
+						//
+						// 	const status = result.accepted.length > 0 ? "sent" : "error";
+						// 	await createdEmailContactHistory.update({ status });
+						// 	console.log(`✅ Email envoyé à ${toEmail.email}`);
+						// } catch (err) {
+						// 	await createdEmailContactHistory.update({ status: "error" });
+						// 	console.error(`❌ Erreur pour ${toEmail.email}: ${err.message}`);
+						// }
 					}),
 				);
 
