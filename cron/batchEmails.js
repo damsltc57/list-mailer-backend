@@ -7,7 +7,7 @@ import { buildTransporter } from "../src/utils/transporter.js";
 import { buildMailBodies, formatEmail } from "../src/utils/email.js";
 import ContactModel from "../src/database/models/contact.model.js";
 
-const LIMIT_BATCH_SIZE = 2;
+const LIMIT_BATCH_SIZE = 15;
 
 const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter, object }) => {
 	await Promise.all(
