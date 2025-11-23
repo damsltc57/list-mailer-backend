@@ -28,11 +28,9 @@ const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter,
 				});
 
 				const status = result.accepted.length > 0 ? "sent" : "error";
-				// await createdEmailContactHistory.update({ status });
 				await MailHistoriesContacts.update({ status }, { where: { id: toEmail.mailHistoryContactId } });
 				console.log(`✅ Email envoyé à ${toEmail.email}`);
 			} catch (err) {
-				// await createdEmailContactHistory.update({ status: "error" });
 				await MailHistoriesContacts.update(
 					{ status: "error", error: err.message },
 					{ where: { id: toEmail.mailHistoryContactId } },
@@ -101,8 +99,6 @@ export const getBatchUnsentEmails = async () => {
 		object: emailInfo.object,
 	});
 	transporter?.close();
-	console.log("✅ Tous les e-mails ont été traités.");
-	console.log(unsentEmail);
 };
 
 export async function startBatchEmails() {
