@@ -27,5 +27,5 @@ export const buildTransporter = (mailAccount) => {
 			...(mailAccount?.dkim?.domainName ? { dkim: { ...mailAccount?.dkim } } : {}),
 		};
 	}
-	return nodemailer.createTransport({ ...config, pool: true, rateLimit: Infinity, maxConnections: 5 });
+	return nodemailer.createTransport({ ...config, pool: true, rateLimit: Infinity, maxConnections: 1 });
 };

@@ -91,14 +91,19 @@ export const getBatchUnsentEmails = async () => {
 	const mailAccount = await MailAccountModel.findByPk(emailInfo.mailAccountId);
 	const transporter = buildTransporter(mailAccount);
 	const batchEmails = await buildCronEmails(mailHistories);
-	await sendBatchEmails({
-		batchEmails: batchEmails,
-		content: emailInfo.content,
-		mailAccount,
-		transporter,
-		object: emailInfo.object,
-	});
-	transporter?.close();
+	try {
+		await sendBatchEmails({
+			batchEmails: batchEmails,
+			content: emailInfo.content,
+			mailAccount,
+			transporter,
+			object: emailInfo.object,
+		});
+	} catch (e) {
+		console.log(e);
+	} finally {
+		transporter?.close();
+	}
 };
 
 export async function startBatchEmails() {
