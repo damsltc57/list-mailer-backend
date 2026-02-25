@@ -38,9 +38,33 @@ router.post("/update", isAuthenticated, async function (req, res, next) {
 
 router.get("/list/:listId?", isAuthenticated, async function (req, res, next) {
 	const listId = parseInt(req.params.listId);
+	const { page, limit } = req.query;
+
+	const whereClause = { [Op.or]: [{ userId: req.auth.id }, { userId: null }], ...(!!listId ? { contactListId: listId } : {}) };
+
+	if (page && limit) {
+		const pageNumber = parseInt(page);
+		const limitNumber = parseInt(limit);
+		const offset = (pageNumber - 1) * limitNumber;
+
+		const { count, rows } = await Contact.findAndCountAll({
+			where: whereClause,
+			order: [["companyName", "ASC"]],
+			limit: limitNumber,
+			offset: offset,
+		});
+
+		return res.status(200).json({
+			contacts: rows,
+			total: count,
+			page: pageNumber,
+			totalPages: Math.ceil(count / limitNumber),
+		});
+	}
+
 	const list = await Contact.findAll({
 		order: [["companyName", "ASC"]],
-		where: { [Op.or]: [{ userId: req.auth.id }, { userId: null }], ...(!!listId ? { contactListId: listId } : {}) },
+		where: whereClause,
 	});
 
 	res.status(200).json(list);
