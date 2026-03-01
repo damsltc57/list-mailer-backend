@@ -8,6 +8,8 @@ import authRouter from "./src/routes/auth.js";
 import contactRouter from "./src/routes/contact.js";
 import mailAccount from "./src/routes/mailAccount.js";
 import mailHistory from "./src/routes/mailHistory.js";
+import testMails from "./src/routes/testMails.js";
+import settingsRouter from "./src/routes/settings.js";
 import { applyAssociations } from "./src/database/models/index.js";
 import fileUpload from "express-fileupload";
 import cors from "cors";
@@ -51,6 +53,8 @@ const start = async () => {
 	app.use("/contact", contactRouter);
 	app.use("/mail-account", mailAccount);
 	app.use("/history", mailHistory);
+	app.use("/test-mails", testMails);
+	app.use("/settings", settingsRouter);
 
 	// catch 404 and forward to error handler
 	// app.use(function (req, res, next) {

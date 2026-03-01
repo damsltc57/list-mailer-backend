@@ -3,11 +3,10 @@ import { applyAssociations, Collaborator } from "../src/database/models/index.js
 import MailHistoriesContacts from "../src/database/models/mail-history-contact.model.js";
 import MailHistories from "../src/database/models/mail-history.model.js";
 import MailAccountModel from "../src/database/models/mail-account.model.js";
+import GlobalSettings from "../src/database/models/global-setting.model.js";
 import { buildTransporter } from "../src/utils/transporter.js";
 import { buildMailBodies, formatEmail } from "../src/utils/email.js";
 import ContactModel from "../src/database/models/contact.model.js";
-
-const LIMIT_BATCH_SIZE = 5;
 
 const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter, object }) => {
 	await Promise.all(
@@ -80,11 +79,21 @@ Object
 Transporteur
  */
 export const getBatchUnsentEmails = async () => {
+	let limitBatchSize = 5;
+	try {
+		const settings = await GlobalSettings.findOne();
+		if (settings && settings.batchLimit) {
+			limitBatchSize = settings.batchLimit;
+		}
+	} catch (err) {
+		console.error("Failed to load global settings", err);
+	}
+
 	const unsentEmail = await MailHistoriesContacts.findOne({ where: { status: "pending" } });
 	if (!unsentEmail) return null;
 	const mailHistories = await MailHistoriesContacts.findAll({
 		where: { status: "pending", mailHistoryId: unsentEmail.mailHistoryId },
-		limit: LIMIT_BATCH_SIZE,
+		limit: limitBatchSize,
 	});
 	const emailInfo = await MailHistories.findOne({ where: { id: unsentEmail.mailHistoryId } });
 

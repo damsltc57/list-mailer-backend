@@ -12,7 +12,7 @@ const MailHistoriesContacts = sequelize.define(
 		collaboratorId: DataTypes.INTEGER,
 		error: DataTypes.TEXT,
 	},
-	{ timestamps: false },
+	{ timestamps: true },
 );
 
 export default MailHistoriesContacts;

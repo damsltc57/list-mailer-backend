@@ -21,7 +21,7 @@ export const buildTransporter = (mailAccount) => {
 			host: mailAccount?.host,
 			port: mailAccount?.port,
 			auth: {
-				user: mailAccount?.email,
+				user: mailAccount?.user || mailAccount?.email,
 				pass: mailAccount?.pass,
 			},
 			...(mailAccount?.dkim?.domainName ? { dkim: { ...mailAccount?.dkim } } : {}),

@@ -26,9 +26,34 @@ router.get("/", isAuthenticated, async function (req, res, next) {
 
 	const historyIdsWithDuplicates = new Set(duplicates.map((d) => d.mailHistoryId));
 
+	const statusCounts = await MailHistoriesContacts.findAll({
+		where: { mailHistoryId: { [Op.in]: listIds } },
+		attributes: ["mailHistoryId", "status", [sequelize.fn("COUNT", sequelize.col("id")), "count"]],
+		group: ["mailHistoryId", "status"],
+	});
+
+	const statusMap = {};
+	for (const sc of statusCounts) {
+		const mhId = sc.mailHistoryId;
+		if (!statusMap[mhId]) statusMap[mhId] = { pending: 0, sent: 0, error: 0 };
+		statusMap[mhId][sc.status] = parseInt(sc.get("count"), 10);
+	}
+
 	const formattedList = list.map((item) => {
 		const data = item.toJSON();
 		data.hasDuplicates = historyIdsWithDuplicates.has(data.id);
+
+		const counts = statusMap[data.id] || { pending: 0, sent: 0, error: 0 };
+		let campaignStatus = "ARCHIVÉE";
+		if (counts.pending > 0) {
+			if (counts.sent > 0 || counts.error > 0) {
+				campaignStatus = "EN COURS";
+			} else {
+				campaignStatus = "EN ATTENTE";
+			}
+		}
+		data.campaignStatus = campaignStatus;
+
 		return data;
 	});
 
@@ -50,7 +75,6 @@ router.get("/in-progress", isAuthenticated, async function (req, res, next) {
 			return res.status(200).json([]);
 		}
 
-		// Find the actual MailHistories for these IDs
 		const list = await MailHistories.findAll({
 			where: {
 				id: {
@@ -60,7 +84,37 @@ router.get("/in-progress", isAuthenticated, async function (req, res, next) {
 			order: [["createdAt", "DESC"]],
 		});
 
-		res.status(200).json(list);
+		const statusCounts = await MailHistoriesContacts.findAll({
+			where: { mailHistoryId: { [Op.in]: inProgressIds } },
+			attributes: ["mailHistoryId", "status", [sequelize.fn("COUNT", sequelize.col("id")), "count"]],
+			group: ["mailHistoryId", "status"],
+		});
+
+		const statusMap = {};
+		for (const sc of statusCounts) {
+			const mhId = sc.mailHistoryId;
+			if (!statusMap[mhId]) statusMap[mhId] = { pending: 0, sent: 0, error: 0 };
+			statusMap[mhId][sc.status] = parseInt(sc.get("count"), 10);
+		}
+
+		const formattedList = list.map((item) => {
+			const data = item.toJSON();
+
+			const counts = statusMap[data.id] || { pending: 0, sent: 0, error: 0 };
+			let campaignStatus = "ARCHIVÉE";
+			if (counts.pending > 0) {
+				if (counts.sent > 0 || counts.error > 0) {
+					campaignStatus = "EN COURS";
+				} else {
+					campaignStatus = "EN ATTENTE";
+				}
+			}
+			data.campaignStatus = campaignStatus;
+
+			return data;
+		});
+
+		res.status(200).json(formattedList);
 	} catch (error) {
 		console.error("Error fetching in-progress mail histories:", error);
 		res.status(500).json({ error: "Internal server error" });
@@ -150,17 +204,23 @@ router.get("/batch/infos", isAuthenticated, async function (req, res, next) {
 router.get("/contacts-by-status", isAuthenticated, async function (req, res, next) {
 	try {
 		const { status } = req.query;
+		let page = parseInt(req.query.page) || 1;
+		let limit = parseInt(req.query.limit) || 500;
 
 		if (!status) {
 			return res.status(400).json({ error: "Status parameter is required" });
 		}
 
-		const contacts = await MailHistoriesContacts.findAll({
+		const offset = (page - 1) * limit;
+
+		const { count, rows } = await MailHistoriesContacts.findAndCountAll({
 			where: { status },
-			order: [["id", "DESC"]],
+			order: [["updatedAt", "DESC"], ["id", "DESC"]],
+			limit,
+			offset,
 		});
 
-		res.status(200).json(contacts);
+		res.status(200).json({ data: rows, total: count });
 	} catch (error) {
 		console.error("Error fetching contacts by status:", error);
 		res.status(500).json({ error: "Internal server error" });
