@@ -32,7 +32,10 @@ const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter,
 				});
 
 				const status = result.accepted.length > 0 ? "sent" : "error";
-				await MailHistoriesContacts.update({ status, processedAt: new Date() }, { where: { id: toEmail.mailHistoryContactId } });
+				await MailHistoriesContacts.update(
+					{ status, processedAt: new Date() },
+					{ where: { id: toEmail.mailHistoryContactId } },
+				);
 				if (status === "sent") {
 					successCount++;
 					console.log(`✅ Email envoyé à ${toEmail.email}`);
@@ -60,6 +63,7 @@ const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter,
 
 export const buildCronEmails = async (to) => {
 	const toEmails = [];
+	const missingContactIds = [];
 
 	for (const contact of to) {
 		if (!contact?.collaboratorId) {
@@ -71,6 +75,8 @@ export const buildCronEmails = async (to) => {
 					firstName: data.firstName,
 					mailHistoryContactId: contact.id,
 				});
+			} else {
+				missingContactIds.push(contact.id);
 			}
 		} else {
 			const collaborator = await Collaborator.findByPk(contact.collaboratorId);
@@ -82,10 +88,12 @@ export const buildCronEmails = async (to) => {
 					collaboratorId: collaborator.id,
 					mailHistoryContactId: contact.id,
 				});
+			} else {
+				missingContactIds.push(contact.id);
 			}
 		}
 	}
-	return toEmails;
+	return { toEmails, missingContactIds };
 };
 
 /*
@@ -115,31 +123,50 @@ export const getBatchUnsentEmails = async () => {
 
 	const mailAccount = await MailAccountModel.findByPk(emailInfo.mailAccountId);
 	const transporter = buildTransporter(mailAccount);
-	const batchEmails = await buildCronEmails(mailHistories);
+	const { toEmails: batchEmails, missingContactIds } = await buildCronEmails(mailHistories);
 	try {
-		const { successCount, errorCount, errorDetails } = await sendBatchEmails({
-			batchEmails: batchEmails,
-			content: emailInfo.content,
-			mailAccount,
-			transporter,
-			object: emailInfo.object,
-		});
+		let totalErrorCount = 0;
+		const allErrorDetails = [];
+
+		if (missingContactIds.length > 0) {
+			await MailHistoriesContacts.update(
+				{ status: "error", error: "Contact ou collaborateur introuvable (supprimé)", processedAt: new Date() },
+				{ where: { id: missingContactIds } }
+			);
+			totalErrorCount += missingContactIds.length;
+			allErrorDetails.push(`${missingContactIds.length} contact(s) ignoré(s) car introuvable(s) en base`);
+		}
+
+		let successCount = 0;
+		if (batchEmails.length > 0) {
+			const batchResult = await sendBatchEmails({
+				batchEmails: batchEmails,
+				content: emailInfo.content,
+				mailAccount,
+				transporter,
+				object: emailInfo.object,
+			});
+			successCount = batchResult.successCount;
+			totalErrorCount += batchResult.errorCount;
+			if (batchResult.errorDetails.length > 0) {
+				allErrorDetails.push(...batchResult.errorDetails);
+			}
+		}
 
 		let status = "success";
 		let summary = `${successCount} email(s) envoyé(s)`;
-		if (errorCount > 0) {
+		if (totalErrorCount > 0) {
 			status = successCount === 0 ? "error" : "warning";
-			summary += `, ${errorCount} erreur(s)`;
+			summary += `, ${totalErrorCount} erreur(s)`;
 		}
 
 		await CronLog.create({
 			cronName: "batchEmails",
 			status,
 			summary,
-			details: errorDetails.length ? JSON.stringify(errorDetails) : null,
-			timestamp: new Date()
+			details: allErrorDetails.length ? JSON.stringify(allErrorDetails) : null,
+			timestamp: new Date(),
 		});
-
 	} catch (e) {
 		console.log(e);
 		await CronLog.create({
@@ -147,7 +174,7 @@ export const getBatchUnsentEmails = async () => {
 			status: "error",
 			summary: "Erreur globale d'exécution",
 			details: JSON.stringify([e.message || "Erreur inconnue"]),
-			timestamp: new Date()
+			timestamp: new Date(),
 		});
 	} finally {
 		transporter?.close();
