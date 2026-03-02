@@ -148,12 +148,16 @@ router.get("/stats", isAuthenticated, async function (req, res, next) {
 			completedWhere.createdAt = {};
 			contactsWhere.createdAt = {};
 			if (startDate) {
-				completedWhere.createdAt[Op.gte] = new Date(startDate);
-				contactsWhere.createdAt[Op.gte] = new Date(startDate);
+				const start = new Date(startDate);
+				if (startDate.length <= 10) start.setUTCHours(0, 0, 0, 0);
+				completedWhere.createdAt[Op.gte] = start;
+				contactsWhere.createdAt[Op.gte] = start;
 			}
 			if (endDate) {
-				completedWhere.createdAt[Op.lte] = new Date(endDate);
-				contactsWhere.createdAt[Op.lte] = new Date(endDate);
+				const end = new Date(endDate);
+				if (endDate.length <= 10) end.setUTCHours(23, 59, 59, 999);
+				completedWhere.createdAt[Op.lte] = end;
+				contactsWhere.createdAt[Op.lte] = end;
 			}
 		}
 
@@ -200,10 +204,14 @@ router.get("/stats/chart", isAuthenticated, async function (req, res, next) {
 		if (startDate || endDate) {
 			whereClause.processedAt = {};
 			if (startDate) {
-				whereClause.processedAt[Op.gte] = new Date(startDate);
+				const start = new Date(startDate);
+				if (startDate.length <= 10) start.setUTCHours(0, 0, 0, 0);
+				whereClause.processedAt[Op.gte] = start;
 			}
 			if (endDate) {
-				whereClause.processedAt[Op.lte] = new Date(endDate);
+				const end = new Date(endDate);
+				if (endDate.length <= 10) end.setUTCHours(23, 59, 59, 999);
+				whereClause.processedAt[Op.lte] = end;
 			}
 		}
 
