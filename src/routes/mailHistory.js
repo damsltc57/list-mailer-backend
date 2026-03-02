@@ -305,6 +305,35 @@ router.get("/contacts-by-status", isAuthenticated, async function (req, res, nex
 	}
 });
 
+router.post("/contacts-requeue", isAuthenticated, async function (req, res, next) {
+	try {
+		const { ids } = req.body;
+		if (!ids || !Array.isArray(ids) || ids.length === 0) {
+			return res.status(400).json({ error: "Missing or invalid 'ids' array parameter" });
+		}
+
+		// Only requeue contacts that are currently in "error" state
+		const [updatedCount] = await MailHistoriesContacts.update(
+			{
+				status: "pending",
+				error: null,
+				processedAt: null,
+			},
+			{
+				where: {
+					id: { [Op.in]: ids },
+					status: "error",
+				},
+			}
+		);
+
+		res.status(200).json({ success: true, updatedCount });
+	} catch (error) {
+		console.error("Error requeueing contacts:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 router.delete("/batch/:batchId/duplicates", isAuthenticated, async function (req, res, next) {
 	try {
 		const { batchId } = req.params;

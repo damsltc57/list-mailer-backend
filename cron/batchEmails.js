@@ -106,8 +106,19 @@ export const getBatchUnsentEmails = async () => {
 	let limitBatchSize = 5;
 	try {
 		const settings = await GlobalSettings.findOne();
-		if (settings && settings.batchLimit) {
-			limitBatchSize = settings.batchLimit;
+		if (settings) {
+			if (settings.isPaused) {
+				console.log("⏸️ L'envoi de masse est en pause.");
+				await CronLog.create({
+					cronName: "batchEmails",
+					status: "warning",
+					summary: "Envoi mis en pause",
+					details: JSON.stringify(["Le système a été mis en pause manuellement."]),
+					timestamp: new Date(),
+				});
+				return;
+			}
+			limitBatchSize = settings.batchLimit || 5;
 		}
 	} catch (err) {
 		console.error("Failed to load global settings", err);

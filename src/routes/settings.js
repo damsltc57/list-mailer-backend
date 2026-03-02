@@ -60,14 +60,20 @@ router.get("/", isAuthenticated, async function (req, res, next) {
 
 router.post("/update", isAuthenticated, async function (req, res, next) {
 	try {
-		const { batchLimit } = req.body;
+		const { batchLimit, isPaused } = req.body;
 		const settings = await GlobalSettings.findOne();
 
 		if (settings) {
-			await settings.update({ batchLimit: batchLimit || 5 });
+			const updatePayload = {};
+			if (batchLimit !== undefined) updatePayload.batchLimit = batchLimit;
+			if (isPaused !== undefined) updatePayload.isPaused = isPaused;
+
+			await settings.update(updatePayload);
 			res.status(200).json(settings);
 		} else {
-			const newSettings = await GlobalSettings.create({ batchLimit: batchLimit || 5 });
+			const createPayload = { batchLimit: batchLimit || 5 };
+			if (isPaused !== undefined) createPayload.isPaused = isPaused;
+			const newSettings = await GlobalSettings.create(createPayload);
 			res.status(200).json(newSettings);
 		}
 	} catch (error) {
