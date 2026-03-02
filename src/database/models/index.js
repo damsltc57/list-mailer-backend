@@ -4,6 +4,7 @@ import Contact from "./contact.model.js";
 import Collaborator from "./collaborator.model.js";
 import MailTestHistories from "./mail-test-history.model.js";
 import GlobalSettings from "./global-setting.model.js";
+import CronLog from "./cron-log.model.js";
 
 // Définir les relations après que les modèles soient chargés
 export function applyAssociations() {
@@ -12,4 +13,4 @@ export function applyAssociations() {
 }
 
 // Optionnel : exporter pour usage ailleurs
-export { Contact, Collaborator, MailTestHistories, GlobalSettings, sequelize };
+export { Contact, Collaborator, MailTestHistories, GlobalSettings, CronLog, sequelize };

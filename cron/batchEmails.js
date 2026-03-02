@@ -4,11 +4,16 @@ import MailHistoriesContacts from "../src/database/models/mail-history-contact.m
 import MailHistories from "../src/database/models/mail-history.model.js";
 import MailAccountModel from "../src/database/models/mail-account.model.js";
 import GlobalSettings from "../src/database/models/global-setting.model.js";
+import CronLog from "../src/database/models/cron-log.model.js";
 import { buildTransporter } from "../src/utils/transporter.js";
 import { buildMailBodies, formatEmail } from "../src/utils/email.js";
 import ContactModel from "../src/database/models/contact.model.js";
 
 const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter, object }) => {
+	let successCount = 0;
+	let errorCount = 0;
+	const errorDetails = [];
+
 	await Promise.all(
 		batchEmails.map(async (toEmail) => {
 			const updatedContent = formatEmail(content, toEmail, mailAccount.signature);
@@ -27,19 +32,30 @@ const sendBatchEmails = async ({ batchEmails, content, mailAccount, transporter,
 				});
 
 				const status = result.accepted.length > 0 ? "sent" : "error";
-				await MailHistoriesContacts.update({ status }, { where: { id: toEmail.mailHistoryContactId } });
-				console.log(`✅ Email envoyé à ${toEmail.email}`);
+				await MailHistoriesContacts.update({ status, processedAt: new Date() }, { where: { id: toEmail.mailHistoryContactId } });
+				if (status === "sent") {
+					successCount++;
+					console.log(`✅ Email envoyé à ${toEmail.email}`);
+				} else {
+					errorCount++;
+					errorDetails.push(`Erreur d'envoi pour ${toEmail.email}`);
+					console.log(`⚠️ Email non accepté pour ${toEmail.email}`);
+				}
 			} catch (err) {
 				await MailHistoriesContacts.update(
-					{ status: "error", error: err.message },
+					{ status: "error", error: err.message, processedAt: new Date() },
 					{ where: { id: toEmail.mailHistoryContactId } },
 				);
+				errorCount++;
+				errorDetails.push(`${toEmail.email}: ${err.message}`);
 				console.error(`❌ Erreur pour ${toEmail.email}: ${err.message}`);
 			}
 		}),
 	);
 
 	await new Promise((resolve) => setTimeout(resolve, 1000));
+
+	return { successCount, errorCount, errorDetails };
 };
 
 export const buildCronEmails = async (to) => {
@@ -101,15 +117,38 @@ export const getBatchUnsentEmails = async () => {
 	const transporter = buildTransporter(mailAccount);
 	const batchEmails = await buildCronEmails(mailHistories);
 	try {
-		await sendBatchEmails({
+		const { successCount, errorCount, errorDetails } = await sendBatchEmails({
 			batchEmails: batchEmails,
 			content: emailInfo.content,
 			mailAccount,
 			transporter,
 			object: emailInfo.object,
 		});
+
+		let status = "success";
+		let summary = `${successCount} email(s) envoyé(s)`;
+		if (errorCount > 0) {
+			status = successCount === 0 ? "error" : "warning";
+			summary += `, ${errorCount} erreur(s)`;
+		}
+
+		await CronLog.create({
+			cronName: "batchEmails",
+			status,
+			summary,
+			details: errorDetails.length ? JSON.stringify(errorDetails) : null,
+			timestamp: new Date()
+		});
+
 	} catch (e) {
 		console.log(e);
+		await CronLog.create({
+			cronName: "batchEmails",
+			status: "error",
+			summary: "Erreur globale d'exécution",
+			details: JSON.stringify([e.message || "Erreur inconnue"]),
+			timestamp: new Date()
+		});
 	} finally {
 		transporter?.close();
 	}

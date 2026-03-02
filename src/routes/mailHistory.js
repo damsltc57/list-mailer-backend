@@ -181,6 +181,76 @@ router.get("/stats", isAuthenticated, async function (req, res, next) {
 	}
 });
 
+router.get("/stats/chart", isAuthenticated, async function (req, res, next) {
+	try {
+		const { startDate, endDate, groupBy = "hour" } = req.query;
+
+		// Map simple frontend grouping names to Postgres DATE_TRUNC arguments
+		const pgGroupByMap = {
+			hour: "hour",
+			day: "day",
+			month: "month"
+		};
+		const pgGroup = pgGroupByMap[groupBy] || "hour";
+
+		const whereClause = {
+			status: { [Op.in]: ["sent", "error"] }
+		};
+
+		if (startDate || endDate) {
+			whereClause.processedAt = {};
+			if (startDate) {
+				whereClause.processedAt[Op.gte] = new Date(startDate);
+			}
+			if (endDate) {
+				whereClause.processedAt[Op.lte] = new Date(endDate);
+			}
+		}
+
+		// Use DATE_TRUNC to bucket by the requested time interval
+		const results = await MailHistoriesContacts.findAll({
+			attributes: [
+				[sequelize.fn("DATE_TRUNC", pgGroup, sequelize.col("processedAt")), "timeBucket"],
+				"status",
+				[sequelize.fn("COUNT", sequelize.col("id")), "count"]
+			],
+			where: whereClause,
+			group: [sequelize.fn("DATE_TRUNC", pgGroup, sequelize.col("processedAt")), "status"],
+			order: [[sequelize.fn("DATE_TRUNC", pgGroup, sequelize.col("processedAt")), "ASC"]],
+			raw: true
+		});
+
+		// Restructure the response to easily feed Recharts
+		// We want something like: { "2023-10-25T10:00:00.000Z": { sent: 50, error: 2, time: "2023-10-25T10:00:00.000Z" } }
+		const transformedData = {};
+
+		results.forEach(row => {
+			const timeKey = new Date(row.timeBucket).toISOString();
+
+			if (!transformedData[timeKey]) {
+				transformedData[timeKey] = {
+					time: timeKey,
+					sent: 0,
+					error: 0
+				};
+			}
+
+			if (row.status === "sent") {
+				transformedData[timeKey].sent = parseInt(row.count, 10);
+			} else if (row.status === "error") {
+				transformedData[timeKey].error = parseInt(row.count, 10);
+			}
+		});
+
+		const chartDataArray = Object.values(transformedData).sort((a, b) => new Date(a.time) - new Date(b.time));
+
+		res.status(200).json(chartDataArray);
+	} catch (error) {
+		console.error("Error fetching chart stats:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 router.get("/batch/infos", isAuthenticated, async function (req, res, next) {
 	const batchId = req.query.batchId;
 	const list = await MailHistoriesContacts.findAndCountAll({ where: { mailHistoryId: batchId } });

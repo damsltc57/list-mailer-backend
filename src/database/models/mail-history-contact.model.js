@@ -11,6 +11,7 @@ const MailHistoriesContacts = sequelize.define(
 		email: DataTypes.STRING,
 		collaboratorId: DataTypes.INTEGER,
 		error: DataTypes.TEXT,
+		processedAt: { type: DataTypes.DATE, allowNull: true, defaultValue: null },
 	},
 	{ timestamps: true },
 );

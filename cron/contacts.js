@@ -5,6 +5,7 @@ import Contact from "../src/database/models/contact.model.js";
 import { applyAssociations, Collaborator } from "../src/database/models/index.js";
 import { connectDB } from "../src/database/db.js";
 import { diffCollaborators, getCollaborators } from "./utils.js";
+import CronLog from "../src/database/models/cron-log.model.js";
 
 function wait(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,6 +26,7 @@ async function getAllSheetsData() {
 
 	const sheetsApi = google.sheets({ version: "v4", auth });
 	const spreadsheetId = process.env.SPREAD_SHEET_ID;
+	let allLogs = [];
 	try {
 		const metadata = await sheetsApi.spreadsheets.get({
 			spreadsheetId: spreadsheetId,
@@ -49,15 +51,32 @@ async function getAllSheetsData() {
 				return obj;
 			});
 
-			await saveContactsToDB(data, title);
+			const logs = await saveContactsToDB(data, title);
+			allLogs.push(...logs);
 			await wait(2000);
 		}
+
+		await CronLog.create({
+			cronName: "contactsSync",
+			status: "success",
+			summary: "Synchronisation Google Sheets terminée",
+			details: JSON.stringify(allLogs),
+			timestamp: new Date()
+		});
 	} catch (error) {
 		console.error(error);
+		await CronLog.create({
+			cronName: "contactsSync",
+			status: "error",
+			summary: "Erreur globale d'exécution",
+			details: JSON.stringify([error.message || "Erreur inconnue"]),
+			timestamp: new Date()
+		});
 	}
 }
 
 async function saveContactsToDB(contacts, sheetName) {
+	let logs = [];
 	let contactList = await ContactList.findOne({ where: { name: sheetName } });
 	if (!contactList) {
 		contactList = await ContactList.create({ name: sheetName });
@@ -173,7 +192,9 @@ async function saveContactsToDB(contacts, sheetName) {
 				include: [{ model: Collaborator, as: "collaborators" }],
 			});
 		}
-		console.log(`✅ Ajouté ${contactsToInsert.length} nouveaux contacts dans "${sheetName}"`);
+		const msg = `✅ Ajouté ${contactsToInsert.length} nouveaux contacts dans "${sheetName}"`;
+		console.log(msg);
+		logs.push(msg);
 	}
 
 	// UPDATES : base + collaborateurs (create/update/delete)
@@ -213,19 +234,27 @@ async function saveContactsToDB(contacts, sheetName) {
 				}
 			}
 		}
-		console.log(`♻️ Mis à jour ${contactsToUpdate.length} contacts dans "${sheetName}"`);
+		const msg = `♻️ Mis à jour ${contactsToUpdate.length} contacts dans "${sheetName}"`;
+		console.log(msg);
+		logs.push(msg);
 	}
 
 	// DELETES : contacts
 	if (emailsToDelete.length > 0) {
 		// Les Collaborators devraient être supprimés par CASCADE si défini, sinon gérer ici.
 		await Contact.destroy({ where: { id: emailsToDelete } });
-		console.log(`🗑️ Supprimé ${emailsToDelete.length} contacts obsolètes dans "${sheetName}"`);
+		const msg = `🗑️ Supprimé ${emailsToDelete.length} contacts obsolètes dans "${sheetName}"`;
+		console.log(msg);
+		logs.push(msg);
 	}
 
 	if (contactsToInsert.length === 0 && contactsToUpdate.length === 0 && emailsToDelete.length === 0) {
-		console.log(`ℹ️ Liste "${sheetName}" déjà à jour, aucune modification`);
+		const msg = `ℹ️ Liste "${sheetName}" déjà à jour, aucune modification`;
+		console.log(msg);
+		logs.push(msg);
 	}
+
+	return logs;
 }
 
 export async function updateContacts() {

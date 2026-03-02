@@ -10,6 +10,7 @@ import mailAccount from "./src/routes/mailAccount.js";
 import mailHistory from "./src/routes/mailHistory.js";
 import testMails from "./src/routes/testMails.js";
 import settingsRouter from "./src/routes/settings.js";
+import cronLogsRouter from "./src/routes/cronLogs.js";
 import { applyAssociations } from "./src/database/models/index.js";
 import fileUpload from "express-fileupload";
 import cors from "cors";
@@ -55,6 +56,7 @@ const start = async () => {
 	app.use("/history", mailHistory);
 	app.use("/test-mails", testMails);
 	app.use("/settings", settingsRouter);
+	app.use("/cron-logs", cronLogsRouter);
 
 	// catch 404 and forward to error handler
 	// app.use(function (req, res, next) {
