@@ -3,7 +3,7 @@ import isAuthenticated from "../middleware/isAuthenticated.js";
 import { MailTestHistories } from "../database/models/index.js";
 import MailAccounts from "../database/models/mail-account.model.js";
 import { buildTransporter } from "../utils/transporter.js";
-import { buildMailBodies } from "../utils/email.js";
+import { buildMailBodies, formatEmail } from "../utils/email.js";
 
 const router = express.Router();
 
@@ -65,6 +65,8 @@ router.post("/send", isAuthenticated, async function (req, res, next) {
 
         const transporter = buildTransporter(mailAccount);
 
+        const updatedContent = formatEmail(content, { firstName: "Test", email: to }, mailAccount.signature);
+
         const emailData = {
             from: {
                 name: mailAccount.emailNickname,
@@ -72,8 +74,8 @@ router.post("/send", isAuthenticated, async function (req, res, next) {
             },
             to: to,
             subject: object || "Test Email",
-            text: buildMailBodies({ html: content, htmlToTextOptions: {} }),
-            html: content,
+            text: buildMailBodies({ html: updatedContent, htmlToTextOptions: {} }),
+            html: updatedContent,
             attachments: attachments,
         };
 
