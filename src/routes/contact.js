@@ -40,7 +40,10 @@ router.get("/list/:listId?", isAuthenticated, async function (req, res, next) {
 	const listId = parseInt(req.params.listId);
 	const { page, limit } = req.query;
 
-	const whereClause = { [Op.or]: [{ userId: req.auth.id }, { userId: null }], ...(!!listId ? { contactListId: listId } : {}) };
+	const whereClause = {
+		[Op.or]: [{ userId: req.auth.id }, { userId: null }],
+		...(!!listId ? { contactListId: listId } : {}),
+	};
 
 	if (page && limit) {
 		const pageNumber = parseInt(page);
@@ -125,13 +128,13 @@ router.get("/find", isAuthenticated, async function (req, res, next) {
 	res.status(200).json(list);
 });
 
-router.get("/ids", isAuthenticated, async function (req, res, next) {
-	const { ids } = req.query;
-	const idList = ids.split(",").map(Number);
+router.post("/ids", isAuthenticated, async function (req, res, next) {
+	const { ids } = req.body;
+	// const idList = ids.split(",").map(Number);
 	const list = await Contact.findAll({
 		order: [["createdAt", "DESC"]],
 		where: {
-			id: { [Op.in]: idList },
+			id: { [Op.in]: ids },
 		},
 	});
 	res.status(200).json(list);
